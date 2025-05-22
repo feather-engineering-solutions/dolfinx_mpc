@@ -164,7 +164,7 @@ class LinearProblem(dolfinx.fem.petsc.LinearProblem):
 class EigenProblem:
     """
     Class for solving eigenvalue problems with multi point constraints.
-    Supports both standard eigenvalue problems (A*x = λ*x) and generalized 
+    Supports both standard eigenvalue problems (A*x = λ*x) and generalized
     eigenvalue problems (A*x = λ*B*x).
 
     Args:
@@ -184,7 +184,7 @@ class EigenProblem:
         .. code-block:: python
 
            problem = EigenProblem(a, mpc, bcs=[bc0, bc1],
-                                 slepc_options={"eps_type": "krylovschur", 
+                                 slepc_options={"eps_type": "krylovschur",
                                                "eps_nev": 10})
            eigvals, eigvecs = problem.solve()
 
@@ -195,7 +195,7 @@ class EigenProblem:
 
            problem = EigenProblem(a, mpc, b=b_form, bcs=[bc0, bc1],
                                  slepc_options={"eps_type": "gen_hermitian",
-                                               "st_type": "sinvert", 
+                                               "st_type": "sinvert",
                                                "eps_target": 0.0})
            eigvals, eigvecs = problem.solve()
     """
@@ -226,7 +226,9 @@ class EigenProblem:
         form_compiler_options = {} if form_compiler_options is None else form_compiler_options
         jit_options = {} if jit_options is None else jit_options
         self._a = _fem.form(a, jit_options=jit_options, form_compiler_options=form_compiler_options)
-        self._b = _fem.form(b, jit_options=jit_options, form_compiler_options=form_compiler_options) if b is not None else None
+        self._b = (_fem.form(b, jit_options=jit_options,
+                            form_compiler_options=form_compiler_options)
+                   if b is not None else None)
 
         if not mpc.finalized:
             raise RuntimeError("The multi point constraint has to be finalized before calling initializer")
