@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 from mpi4py import MPI
-from petsc4py import PETSc
 
 import numpy as np
 import numpy.testing as nt
@@ -19,7 +18,6 @@ import dolfinx_mpc
 
 # Skip all tests if SLEPc is not available
 slepc4py = pytest.importorskip("slepc4py")
-from slepc4py import SLEPc
 
 
 def test_standard_eigenvalue_problem():
@@ -81,17 +79,17 @@ def test_generalized_eigenvalue_problem():
     # Define variational forms
     u = ufl.TrialFunction(V)
     v = ufl.TestFunction(V)
-    
+
     # Stiffness matrix (A)
     a = ufl.inner(ufl.grad(u), ufl.grad(v)) * ufl.dx
-    
+
     # Mass matrix (B)
     b = ufl.inner(u, v) * ufl.dx
 
     # Create boundary conditions (fix left edge)
     def left_boundary(x):
         return np.isclose(x[0], 0)
-    
+
     left_facets = locate_entities_boundary(mesh, 1, left_boundary)
     left_dofs = fem.locate_dofs_topological(V, 1, left_facets)
     bc = fem.dirichletbc(default_scalar_type(0), left_dofs, V)
@@ -159,7 +157,7 @@ def test_eigenvalue_problem_with_complex_mpc():
     facets_x = locate_entities_boundary(mesh, 1, periodic_condition_x)
     arg_sort_x = np.argsort(facets_x)
     mt_x = meshtags(mesh, 1, facets_x[arg_sort_x], np.full(len(facets_x), 1, dtype=np.int32))
-    
+
     facets_y = locate_entities_boundary(mesh, 1, periodic_condition_y)
     arg_sort_y = np.argsort(facets_y)
     mt_y = meshtags(mesh, 1, facets_y[arg_sort_y], np.full(len(facets_y), 2, dtype=np.int32))
@@ -184,7 +182,7 @@ def test_eigenvalue_problem_with_complex_mpc():
 
     # Verify results
     assert len(eigenvalues) >= 15
-    
+
     # The smallest eigenvalue should be close to 0 (constant mode)
     min_eigenvalue = min(np.real(ev) for ev in eigenvalues)
     nt.assert_allclose(min_eigenvalue, 0.0, atol=1e-8)
@@ -217,7 +215,7 @@ def test_eigenvalue_problem_options():
         "eps_tol": 1e-10,
         "eps_max_it": 200,
     }
-    
+
     problem = dolfinx_mpc.EigenProblem(a, mpc, slepc_options=custom_options)
     eigenvalues, eigenvectors = problem.solve()
 

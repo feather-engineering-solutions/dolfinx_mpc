@@ -9,7 +9,6 @@ This demo illustrates how to:
 """
 
 from mpi4py import MPI
-from petsc4py import PETSc
 
 import numpy as np
 import ufl
@@ -106,7 +105,7 @@ for i, eigval in enumerate(eigenvalues2[:5]):
 # Save eigenvectors for visualization
 with io.XDMFFile(domain.comm, "eigenmodes.xdmf", "w") as xdmf:
     xdmf.write_mesh(domain)
-    
+
     # Save first 3 eigenmodes from generalized problem
     for i in range(min(3, len(eigenvectors2))):
         eigenvectors2[i].name = f"eigenmode_{i+1}"
