@@ -258,7 +258,7 @@ class EigenProblem:
         # Set SLEPc options
         opts = PETSc.Options()  # type: ignore
         opts.prefixPush(solver_prefix)
-        
+
         # Set some sensible defaults
         default_options = {
             "eps_type": "krylovschur",
@@ -266,17 +266,17 @@ class EigenProblem:
             "eps_tol": 1e-8,
             "eps_max_it": 100,
         }
-        
+
         # Apply default options first
         for k, v in default_options.items():
             opts[k] = v
-            
+
         # Then override with user options
         if slepc_options is not None:
             for k, v in slepc_options.items():
                 opts[k] = v
         opts.prefixPop()
-        
+
     def assemble(self):
         """Assemble the matrices for the eigenvalue problem."""
         # Assemble A matrix
@@ -284,7 +284,7 @@ class EigenProblem:
         assemble_matrix(self._a, self._mpc, bcs=self.bcs, A=self._A)
         self._A.assemble()
         assert self._A.assembled
-        
+
         # Assemble B matrix if provided
         if self._B is not None:
             self._B.zeroEntries()
@@ -306,44 +306,44 @@ class EigenProblem:
         """
         # Assemble matrices
         self.assemble()
-        
+
         # Set matrices in solver
         if self._B is not None:
             self._solver.setOperators(self._A, self._B)
         else:
             self._solver.setOperators(self._A)
-            
+
         # Set number of eigenvalues if specified
         if nev is not None:
             self._solver.setDimensions(nev=nev)
-            
+
         # Apply options and solve
         self._solver.setFromOptions()
         self._solver.solve()
-        
+
         # Extract eigenvalues and eigenvectors
         nconv = self._solver.getConverged()
         eigenvalues = []
         eigenvectors = []
-        
+
         # Create vectors for eigenvalue extraction
         vr = self._A.createVecRight()
         vi = self._A.createVecRight()
-        
+
         for i in range(nconv):
             # Get eigenvalue
             eigval = self._solver.getEigenpair(i, vr, vi)
             eigenvalues.append(eigval)
-            
+
             # Create function for eigenvector
             eigvec = _fem.Function(self._mpc.function_space)
             eigvec.x.petsc_vec.array[:] = vr.array_r
             eigvec.x.scatter_forward()
-            
+
             # Apply MPC backsubstitution
             self._mpc.backsubstitution(eigvec)
             eigenvectors.append(eigvec)
-            
+
             # Handle complex eigenvectors if needed
             if vi.norm() > 1e-12:
                 eigvec_imag = _fem.Function(self._mpc.function_space)
@@ -352,16 +352,16 @@ class EigenProblem:
                 self._mpc.backsubstitution(eigvec_imag)
                 # Store complex part - you might want to handle this differently
                 # For now, we'll just store the real part
-                
+
         vr.destroy()
         vi.destroy()
-        
+
         return eigenvalues, eigenvectors
-    
+
     def get_number_converged(self) -> int:
         """Get the number of converged eigenvalues from the last solve."""
         return self._solver.getConverged()
-    
+
     def error_estimate(self, i: int) -> float:
         """Get the error estimate for the i-th eigenvalue."""
         return self._solver.computeError(i)
