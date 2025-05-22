@@ -296,7 +296,7 @@ class EigenProblem:
         """Solve the eigenvalue problem.
 
         Args:
-            nev: Number of eigenvalues to compute. If not specified, uses the value 
+            nev: Number of eigenvalues to compute. If not specified, uses the value
                  set in slepc_options or default.
 
         Returns:
